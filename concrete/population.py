@@ -23,7 +23,7 @@ class BinaryChromosome(Chromosome):
         self.__fitness_score: float = 0.
 
     def has_len(self, _len: int) -> bool:
-        return _len == len(self.population[2:])
+        return _len == len(self.population_val())
 
     def phenotype(self, value=None):
         if value is not None:
@@ -31,7 +31,7 @@ class BinaryChromosome(Chromosome):
         else:
             return self.__phenotype
 
-    def population(self, value=None):
+    def population_val(self, value=None):
         if value is not None:
             self.__population_G = value
         else:
@@ -46,13 +46,16 @@ class BinaryChromosome(Chromosome):
 
 class BinaryPopulation(IPopulation):
 
-    def __init__(self, input_set: List[BinaryChromosome], unit_length: int):
+    def __init__(self, input_set: List[Chromosome]):
 
-        if not all(unit.has_len(unit_length) for unit in input_set):
+        random_unit_length = len(random.choice(input_set)
+                                 .population_val())
+
+        if not all(unit.has_len(random_unit_length) for unit in input_set):
             raise ValueError("Population elements should be equal in their size.")
 
         self.__population = input_set
-        self.__unit_length = unit_length
+        self.__unit_length = random_unit_length
 
     def unit_length(self, value=None):
         if value is not None:
@@ -66,7 +69,7 @@ class BinaryPopulation(IPopulation):
         else:
             return self.__population
 
-    def get_fittest(self, count: int) -> List[BinaryChromosome]:
+    def get_fittest(self, count: int) -> List[Chromosome]:
 
         return sorted(self.__population,
                       key=lambda unit: unit.fitness_score,
@@ -77,8 +80,8 @@ class BinaryPopulation(IPopulation):
         pairs = {}
 
         while len(ids) != 0:
-            k = ids.pop(random.randint(0, len(ids)))
-            v = ids.pop(random.randint(0, len(ids)))
+            k = ids.pop(random.choice(ids))
+            v = ids.pop(random.choice(ids))
             pairs[k] = v
 
         return pairs
@@ -86,5 +89,5 @@ class BinaryPopulation(IPopulation):
     def apply_fitness(self, func: FitnessFunction):
 
         for unit in self.__population:
-            unit.fitness_score = func.fitness(unit.phenotype)
+            unit.fitness_score = func.fitness(unit.phenotype())
 

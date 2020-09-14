@@ -29,7 +29,7 @@ class Chromosome(abc.ABC):
         return
 
     @abc.abstractmethod
-    def population(self, value=None):
+    def population_val(self, value=None):
         """
         Population getter and setter.\n
         Binary representation of chromosome.
@@ -73,7 +73,6 @@ class IPopulation(abc.ABC):
         """
         pass
 
-    #
     @abc.abstractmethod
     def population(self, value: List[Chromosome] = None) \
             -> List[Chromosome]:
