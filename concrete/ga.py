@@ -1,9 +1,11 @@
 from datetime import datetime
-from typing import List
+from typing import List, Dict
 import random
 
 from abstract.population import IPopulation, Chromosome
-from abstract.stop_condition import StopCondition
+from abstract.crossover import CrossoverOperator
+from concrete.crossover import SingleCrossover
+from abstract.scondition import StopCondition
 from abstract.fitness import FitnessFunction
 from abstract.ga import GA
 
@@ -12,57 +14,61 @@ class GeneticAlgorithm(GA):
 
     def __init__(self, population: IPopulation,
                  fitness_function: FitnessFunction,
-                 stop_conditions: List[StopCondition],
+                 stop_conditions: List[StopCondition] = None,
+                 crossover_op: CrossoverOperator = SingleCrossover,
                  crossover_chance: float = 0.8,
                  mutation_chance: float = 0.2):
         """
         :param population: Population of chromosomes
         :param fitness_function: Function to find fitness scores
-        :param stop_conditions: List of conditions when GA stop executing
+        :param stop_conditions: List of conditions when GA stop executing (Optional)
+        :param crossover_op: Crossover method (Single by default)
         :param crossover_chance: Chance of crossover
         :param mutation_chance: Chance of mutation
         """
+        super().__init__(population, crossover_chance, mutation_chance)
 
         self._Population = population
         self._fitness_F = fitness_function
-        self.__Pc = crossover_chance
-        self.__Pm = mutation_chance
         self.__stop_cond_s = stop_conditions
+        self.__crossover_func = crossover_op.crossover
 
-        # self._new_population = None
-        self._generation_num: int = 0
-        self.__start_point: datetime = datetime.min
+        # Setting up GA instance for each StopCondition class
+        [sc.ga(self) for sc in self.__stop_cond_s]
 
     def start(self):
-        self.__start_point = datetime.now()
+        self.start_point = datetime.now()
 
-        # Applying fitness function on our population
-        #
-        self._Population \
-            .apply_fitness(self._fitness_F)
+        while True:
+            # Applying fitness function on our population
+            #
+            self._Population \
+                .apply_fitness(self._fitness_F)
 
-        # Checking stop conditions
-        #
-        if any([sc.stop() for sc in self.__stop_cond_s]):
-            print(self.statistics())
-            exit(0)
+            print("Init.", [a.population_val for a in self._Population.population])
+            # Checking stop conditions
+            #
+            if self.__stop_cond_s is not None \
+                    and any([sc.stop() for sc in self.__stop_cond_s]):
+                print(self.statistics())
+                break
 
-        self._selection()
+            self._selection()
+            print("After selection.", [a.population_val for a in self._Population.population])
 
-        # #
-        # Crossover process
-        #
+            # Crossover process
+            #
+            self._crossover()
 
-        # Paired chromosomes
-        pairs = self._Population.get_pairs()
-        p = self._Population.population()
+            print("After crossover.", [a.population_val for a in self._Population.population])
 
-        for f_id, s_id, in pairs.items():
-            self._crossover(p[f_id], p[s_id])
+            # Mutation process
+            #
+            self._mutation()
 
-        # Mutation process
-        #
-        self._mutation()
+            print("After mutation.", [a.population_val for a in self._Population.population])
+            print()
+            self.generation_no += 1
 
     def _selection(self):
         """
@@ -76,11 +82,11 @@ class GeneticAlgorithm(GA):
         population_obj = self._Population
 
         # Sum of population fitness scores
-        # 
+        #
         fitness_score_sum = sum([unit.fitness_score
-                                 for unit in population_obj.population()])
+                                 for unit in population_obj.population])
 
-        pop_size = len(population_obj.population())
+        pop_size = len(population_obj.population)
 
         fittest_units = []
 
@@ -90,8 +96,8 @@ class GeneticAlgorithm(GA):
 
         # Search for each sector size and append it to 'sectors' hash
         #
-        for idx, e in enumerate(population_obj.population()):
-            sectors[idx] = fitness_score_sum / e.fitness_score() + sectors[idx-1]
+        for idx, e in enumerate(population_obj.population):
+            sectors[idx] = round(e.fitness_score / fitness_score_sum + sectors[idx-1], 2)
 
         # Loop to get fittest units for selection
         # Executes 'size of population' times
@@ -116,42 +122,18 @@ class GeneticAlgorithm(GA):
                         fittest_units.append(idx+1)
 
         # Replace old population
-        self._Population.population([population_obj.population()[i] for i in fittest_units])
+        population_obj.population = [population_obj.population[i] for i in fittest_units]
 
-        return self._Population.population()
+        return population_obj.population
 
-    def _crossover(self, first: Chromosome, second: Chromosome):
+    def _crossover(self):
         """
         Crosses two chromosomes.
         :param first: First chromosome
         :param second: Second chromosome
         :return: Crossed chromosomes
         """
-
-        if random.uniform(0, 1) > self.__Pc:
-            return
-
-        # Length of single chromosome
-        unit_len = self._Population.unit_length()
-
-        # Lists of first' and second's chromosome bits.
-        #
-        f, s = list(first.population_val()), list(second.population_val())
-
-        # From which position crossover will be started.
-        #
-        wildcard = random.randint(0, unit_len)
-
-        for b in range(wildcard, unit_len):
-
-            # Swapping bits between two chromosomes
-            #
-            f[b], s[b] = s[b], f[b]
-
-        # Setting values back
-        #
-        first.population_val(''.join(f))
-        second.population_val(''.join(s))
+        self.__crossover_func(self)
 
     def _mutation(self, _population: List[Chromosome] = None):
         """
@@ -164,25 +146,26 @@ class GeneticAlgorithm(GA):
         #
         def swap(bit: str):
             if bit in ('1', '0'):
-                return '0' if bool(bit) else '1'
+                return '0' if int(bit) else '1'
 
         # Chromosome list
-        population = self._Population.population() \
+        population = self._Population.population \
             if _population is None \
             else _population
 
         # Amount of bits that will be affected
         #
-        bits_to_change = int(len(population) * self.__Pm)
+        bits_to_change = int(len(population) * self.mutation_chance)
+        print("Bits to change", bits_to_change)
 
         # Two dimensional list.
         # Parent list contains lists with splitted
         # chromosome population value
         #
-        mutated = [list(p) for p in population]
+        mutated = [list(p.population_val) for p in population]
 
         # Length of single chromosome
-        unit_length = self._Population.unit_length()
+        unit_length = self._Population.unit_length
 
         # Size of all population in bits
         #
@@ -190,47 +173,45 @@ class GeneticAlgorithm(GA):
 
         # Process of mutation
         for _ in range(bits_to_change):
+
             # Position value for single dimension array
-            pos = random.randint(0, pops_size)
+            pos = random.randint(0, pops_size-1)
 
             # Position values for double dimension array.
             # 0 element - position in outer scope.
             # 1 element - in inner scope.
             #
-            positions = str(pos / unit_length).split('.')
-            outer, inner = int(positions[0]), int(positions[1]) - 1
+            outer, inner = pos // unit_length, pos % unit_length
 
             # Process of swapping bits.
-            mutated[outer][inner] = swap(mutated[outer][inner])
+            mutated[outer][inner] = swap(str(mutated[outer][inner]))
 
         # Replaces old population values to newly mutated.
         #
-        [p.population_val(''.join(m)) for p in population for m in mutated]
+        # for idx in range(len(population)):
+        #     population[idx].population_val(''.join(mutated[idx]))
+
+        for idx, chromosome in enumerate(population):
+            chromosome.population_val = ''.join(mutated[idx])
 
     def statistics(self, population: List[Chromosome] = None):
 
-        p = self._Population.population() \
+        p = self._Population.population \
             if population is None \
             else population
 
         __ = str()
-        fitness_avg = sum([c.fitness_score() for c in p]) / len(p)
+        # print(p[0].fitness_score)
+        # [print(c.population_val) for c in p]
+        fitness_avg = sum([c.fitness_score for c in p]) / len(p)
 
         for i, ch in enumerate(p):
-            __ += f"\nChromosome#{i}:\n\n" \
-                  f"Phenotype - {ch.phenotype()}\n" \
-                  f"Population value - {ch.population_val()}\n" \
-                  f"Fitness score - {ch.fitness_score()}\n" \
+            __ += f"\nChromosome #{i+1}:\n\n" \
+                  f"Phenotype - {ch.phenotype}\n" \
+                  f"Population value - {ch.population_val}\n" \
+                  f"Fitness score - {ch.fitness_score}\n" \
                   f"---------------"
 
-        __ += f"Fitness average = {fitness_avg}\n\n"
+        __ += f"Fitness average = {round(fitness_avg, 2)}\n\n"
 
         return __
-
-    @property
-    def generation_No(self):
-        return self._generation_num
-
-    @property
-    def start_point(self):
-        return self.__start_point
