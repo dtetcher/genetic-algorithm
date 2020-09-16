@@ -4,8 +4,6 @@ from abstract.ga import GA
 
 
 class StopCondition(abc.ABC):
-    # def __init__(self):
-    #     self.__ga: GA = GA()
 
     @abc.abstractmethod
     def stop(self) -> bool:

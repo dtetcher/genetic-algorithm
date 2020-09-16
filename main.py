@@ -2,16 +2,16 @@ from datetime import timedelta
 
 from concrete.scondition import TimeOutCondition, IterationCondition
 from concrete.population import BinaryChromosome, BinaryPopulation
-from concrete.crossover import SingleCrossover
+from concrete import crossover as xover
 from concrete.ga import GeneticAlgorithm
 from concrete.fitness import Linear7
 
 
 def main():
 
-    population_size = 6
-    crossover_chance = 0.7
-    mutation_chance = 0.2
+    population_size = 4
+    crossover_chance = 0.9
+    mutation_chance = 0.1
     lower, upper = 0, 60
 
     chromosomes = [BinaryChromosome(lower, upper)
@@ -19,14 +19,15 @@ def main():
 
     population = BinaryPopulation(chromosomes)
 
+    # Function used to determine chromosome potential
     fitness_function = Linear7()
 
     stop_conditions = [
-        IterationCondition(iterations=10),
-        # TimeOutCondition(time=timedelta(seconds=4))
+        IterationCondition(iterations=1000),
+        TimeOutCondition(time=timedelta(seconds=4))
     ]
 
-    crossover_operator = SingleCrossover()
+    crossover_operator = xover.MultiCrossover()
 
     ga = GeneticAlgorithm(population,
                           fitness_function,

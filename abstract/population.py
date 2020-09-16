@@ -11,9 +11,9 @@ class Chromosome(abc.ABC):
     """
 
     def __init__(self, phenotype, pop, fs):
-        self.__phenotype = phenotype
-        self.__population_value = pop
-        self.__fitness_score = fs
+        self.phenotype = phenotype
+        self._population_value = pop
+        self.fitness_score = fs
 
     def has_len(self, _len: int) -> bool:
         """
@@ -22,40 +22,19 @@ class Chromosome(abc.ABC):
         :param _len:
         :return: Bool
         """
-        return _len == len(self.population_val)
+        return _len == len(self.population_value)
 
     @property
-    def phenotype(self):
-        return self.__phenotype
+    def population_value(self):
+        return self._population_value
 
-    @phenotype.setter
-    def phenotype(self, value):
-        self._phenotype_setter(value)
+    @population_value.setter
+    def population_value(self, value):
+        self._population_value_setter(value)
 
-    def _phenotype_setter(self, value):
-        self.__phenotype = value
-
-    @property
-    def population_val(self):
-        return self.__population_value
-
-    @population_val.setter
-    def population_val(self, value):
-        self._pop_val_setter(value)
-
-    def _pop_val_setter(self, value):
-        self.__population_value = value
-
-    @property
-    def fitness_score(self):
-        return self.__fitness_score
-
-    @fitness_score.setter
-    def fitness_score(self, value):
-        self._fitness_score_setter(value)
-
-    def _fitness_score_setter(self, value):
-        self.__fitness_score = value
+    @abc.abstractmethod
+    def _population_value_setter(self, value):
+        pass
 
 
 class IPopulation(abc.ABC):
@@ -67,7 +46,7 @@ class IPopulation(abc.ABC):
     def __init__(self, input_set: List[Chromosome]):
 
         random_unit_length = len(random.choice(input_set)
-                                 .population_val)
+                                 .population_value)
 
         if not all(unit.has_len(random_unit_length) for unit in input_set):
             raise ValueError("Population elements should be equal in their size.")

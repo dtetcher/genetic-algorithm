@@ -1,7 +1,13 @@
 from math import fabs
 
 
+def __crop_prefix(b: str):
+    return b[2:] if b.startswith('0b') else b
+
+
 def to_gray(binary: str, out_len: int):
+
+    binary = __crop_prefix(binary)
 
     # Converting binary to integer
     #
@@ -26,6 +32,9 @@ def to_gray(binary: str, out_len: int):
 
 
 def from_gray(gray_code: str):
+
+    gray_code = __crop_prefix(gray_code)
+
     # Integer representation of gray code
     #
     int_repr = int(gray_code, 2)

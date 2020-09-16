@@ -11,24 +11,24 @@ class BinaryChromosome(Chromosome):
     def __init__(self, a, b, value: int = None):
 
         if value is not None:
-
+            
             if not a <= value <= b:
                 raise ValueError("Chromosome value must be in specified range.")
 
-            self.__phenotype = value
+            phenotype = value
         else:
-            self.__phenotype = random.randint(a, b)
+            phenotype = random.randint(a, b)
 
-        self.__population_G = binary.to_gray(bin(self.__phenotype),
-                                             # If we translate maximal possible value to binary format
-                                             # then we can get length of chromosome population.
-                                             len(bin(b)[2:]))
-        self.__fitness_score: float = 0.
-        super().__init__(self.__phenotype, self.__population_G, self.__fitness_score)
+        population_g = binary.to_gray(bin(phenotype),
+                                      # If translate maximal possible value to binary format
+                                      # then we can get length of chromosome population.
+                                      len(bin(b)[2:]))
+        fitness_score = 0.
+        super().__init__(phenotype, population_g, fitness_score)
 
-    def _pop_val_setter(self, value):
-        self.__population_G = value
-        self.__phenotype = int(binary.from_gray(self.__population_G), 2)
+    def _population_value_setter(self, value):
+        self._population_value = value
+        self.phenotype = int(binary.from_gray(value), 2)
 
 
 class BinaryPopulation(IPopulation):
@@ -52,6 +52,7 @@ class BinaryPopulation(IPopulation):
         pairs = {}
 
         while len(ids) != 0:
+
             k = random.choice(ids)
             ids.remove(k)
 

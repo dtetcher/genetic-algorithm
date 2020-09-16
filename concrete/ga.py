@@ -37,6 +37,8 @@ class GeneticAlgorithm(GA):
         [sc.ga(self) for sc in self.__stop_cond_s]
 
     def start(self):
+
+        print(f"{'*'*30}\nInit statistics\n{'*'*30}\n\n", self.statistics())
         self.start_point = datetime.now()
 
         while True:
@@ -45,29 +47,24 @@ class GeneticAlgorithm(GA):
             self._Population \
                 .apply_fitness(self._fitness_F)
 
-            print("Init.", [a.population_val for a in self._Population.population])
             # Checking stop conditions
             #
             if self.__stop_cond_s is not None \
                     and any([sc.stop() for sc in self.__stop_cond_s]):
-                print(self.statistics())
+                print(f"{'*'*30}\nFinal statistics\n{'*'*30}\n\n")
+                print(self.statistics(end_stat=True))
                 break
 
             self._selection()
-            print("After selection.", [a.population_val for a in self._Population.population])
 
             # Crossover process
             #
             self._crossover()
 
-            print("After crossover.", [a.population_val for a in self._Population.population])
-
             # Mutation process
             #
             self._mutation()
 
-            print("After mutation.", [a.population_val for a in self._Population.population])
-            print()
             self.generation_no += 1
 
     def _selection(self):
@@ -87,7 +84,6 @@ class GeneticAlgorithm(GA):
                                  for unit in population_obj.population])
 
         pop_size = len(population_obj.population)
-
         fittest_units = []
 
         # Dictionary for sectors with initial value
@@ -97,7 +93,7 @@ class GeneticAlgorithm(GA):
         # Search for each sector size and append it to 'sectors' hash
         #
         for idx, e in enumerate(population_obj.population):
-            sectors[idx] = round(e.fitness_score / fitness_score_sum + sectors[idx-1], 2)
+            sectors[idx] = e.fitness_score / fitness_score_sum + sectors.get(idx-1)
 
         # Loop to get fittest units for selection
         # Executes 'size of population' times
@@ -156,13 +152,12 @@ class GeneticAlgorithm(GA):
         # Amount of bits that will be affected
         #
         bits_to_change = int(len(population) * self.mutation_chance)
-        print("Bits to change", bits_to_change)
 
         # Two dimensional list.
         # Parent list contains lists with splitted
         # chromosome population value
         #
-        mutated = [list(p.population_val) for p in population]
+        mutated = [list(p.population_value) for p in population]
 
         # Length of single chromosome
         unit_length = self._Population.unit_length
@@ -188,30 +183,34 @@ class GeneticAlgorithm(GA):
 
         # Replaces old population values to newly mutated.
         #
-        # for idx in range(len(population)):
-        #     population[idx].population_val(''.join(mutated[idx]))
-
         for idx, chromosome in enumerate(population):
-            chromosome.population_val = ''.join(mutated[idx])
+            chromosome.population_value = ''.join(mutated[idx])
 
-    def statistics(self, population: List[Chromosome] = None):
+    def statistics(self, population: List[Chromosome] = None, end_stat: bool = False):
+
+        def run_time(time):
+            return f"{time.seconds} s" \
+                if time.seconds != 0 \
+                else f"{time.microseconds} ms"
 
         p = self._Population.population \
             if population is None \
             else population
 
         __ = str()
-        # print(p[0].fitness_score)
-        # [print(c.population_val) for c in p]
         fitness_avg = sum([c.fitness_score for c in p]) / len(p)
 
         for i, ch in enumerate(p):
             __ += f"\nChromosome #{i+1}:\n\n" \
                   f"Phenotype - {ch.phenotype}\n" \
-                  f"Population value - {ch.population_val}\n" \
+                  f"Population value - {ch.population_value}\n" \
                   f"Fitness score - {ch.fitness_score}\n" \
-                  f"---------------"
+                  f"---------------\n"
 
-        __ += f"Fitness average = {round(fitness_avg, 2)}\n\n"
+        if end_stat:
+            __ += f"---------------\n" \
+                  f"Fitness average = {round(fitness_avg, 2)}\n" \
+                  f"Runtime: {run_time(datetime.now() - self.start_point)}\n" \
+                  f"Iterations: {self.generation_no}\n"
 
         return __
