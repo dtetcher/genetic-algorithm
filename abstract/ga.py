@@ -4,15 +4,18 @@ import abc
 
 from abstract.population import IPopulation
 from abstract.population import Chromosome
+from concrete.list import LimitList
 
 
 class GA(abc.ABC):
 
     def __init__(self, population: IPopulation,
+                 accuracy_list: LimitList,
                  crossover_chance: float,
                  mutation_chance: float):
 
         self.__population = population
+        self.__accuracy_list = accuracy_list
         self.__start_point: datetime = datetime.min
         self.__generation_num: int = 0
         self.__Pc = crossover_chance
@@ -70,3 +73,6 @@ class GA(abc.ABC):
     def mutation_chance(self):
         return self.__Pm
 
+    @property
+    def accuracy_list(self):
+        return self.__accuracy_list

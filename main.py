@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from concrete.scondition import TimeOutCondition, IterationCondition
+from concrete.scondition import IterationCondition, AccuracyCondition, TimeOutCondition
 from concrete.population import BinaryChromosome, BinaryPopulation
 from concrete import crossover as xover
 from concrete.ga import GeneticAlgorithm
@@ -23,8 +23,9 @@ def main():
     fitness_function = Linear7()
 
     stop_conditions = [
-        IterationCondition(iterations=1000),
-        TimeOutCondition(time=timedelta(seconds=4))
+        AccuracyCondition()
+        # IterationCondition(iterations=1000),
+        # TimeOutCondition(time=timedelta(seconds=4)),
     ]
 
     crossover_operator = xover.MultiCrossover()

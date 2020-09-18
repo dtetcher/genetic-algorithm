@@ -1,6 +1,5 @@
 from math import fabs
 
-
 def __crop_prefix(b: str):
     return b[2:] if b.startswith('0b') else b
 

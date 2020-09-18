@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Dict
+from typing import List
 import random
 
 from abstract.population import IPopulation, Chromosome
@@ -7,6 +7,7 @@ from abstract.crossover import CrossoverOperator
 from concrete.crossover import SingleCrossover
 from abstract.scondition import StopCondition
 from abstract.fitness import FitnessFunction
+from .list import LimitList
 from abstract.ga import GA
 
 
@@ -26,15 +27,17 @@ class GeneticAlgorithm(GA):
         :param crossover_chance: Chance of crossover
         :param mutation_chance: Chance of mutation
         """
-        super().__init__(population, crossover_chance, mutation_chance)
 
         self._Population = population
         self._fitness_F = fitness_function
         self.__stop_cond_s = stop_conditions
         self.__crossover_func = crossover_op.crossover
+        self.__accuracy_list = LimitList(len(self._Population.population))
 
         # Setting up GA instance for each StopCondition class
         [sc.ga(self) for sc in self.__stop_cond_s]
+
+        super().__init__(population, self.__accuracy_list, crossover_chance, mutation_chance)
 
     def start(self):
 
@@ -51,6 +54,7 @@ class GeneticAlgorithm(GA):
             #
             if self.__stop_cond_s is not None \
                     and any([sc.stop() for sc in self.__stop_cond_s]):
+
                 print(f"{'*'*30}\nFinal statistics\n{'*'*30}\n\n")
                 print(self.statistics(end_stat=True))
                 break
@@ -65,7 +69,13 @@ class GeneticAlgorithm(GA):
             #
             self._mutation()
 
+            # Increment generation
             self.generation_no += 1
+
+            # Append best chromosome to accuracy list
+            self.__accuracy_list \
+                .append(
+                    self.population.get_fittest(1)[0])
 
     def _selection(self):
         """

@@ -19,6 +19,7 @@ class BinaryChromosome(Chromosome):
         else:
             phenotype = random.randint(a, b)
 
+
         population_g = binary.to_gray(bin(phenotype),
                                       # If translate maximal possible value to binary format
                                       # then we can get length of chromosome population.
