@@ -6,17 +6,17 @@ from abstract.population import Chromosome
 class LimitList:
     def __init__(self, population_size: int):
         self.__units: List[Chromosome] = list()
-        self.__population_size = population_size
+        self.__max_size = 10
 
     def append(self, obj: Chromosome) -> None:
-        if len(self.__units) != self.__population_size:
+        if len(self.__units) != self.__max_size:
             self.__units.append(obj)
         else:
             self.__units.sort(key=lambda c: c.fitness_score)
             self.__units[0] = obj
 
     def is_full(self):
-        return len(self.__units) == self.__population_size
+        return len(self.__units) == self.__max_size
 
     def __repr__(self) -> List[Chromosome]:
         return self.__units
