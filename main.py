@@ -1,10 +1,12 @@
 from datetime import timedelta
 
-from concrete.scondition import IterationCondition, AccuracyCondition, TimeOutCondition
-from concrete.population import BinaryChromosome, BinaryPopulation
-from concrete import crossover as xover
-from concrete.ga import GeneticAlgorithm
-from concrete.fitness import Linear7
+from concrete.scondition import *
+from concrete.population import *
+from concrete.selection import *
+from concrete.crossover import *
+from concrete.mutation import *
+from concrete.fitness import *
+from concrete.ga import *
 
 
 def main():
@@ -23,21 +25,25 @@ def main():
     fitness_function = Linear7()
 
     stop_conditions = [
-        AccuracyCondition()
-        # IterationCondition(iterations=1000),
-        # TimeOutCondition(time=timedelta(seconds=4)),
+        AccuracyCondition(),
+        IterationCondition(iterations=10_000),
+        TimeOutCondition(time=timedelta(minutes=1)),
     ]
 
-    crossover_operator = xover.MultiCrossover()
+    selection_operator = TournamentSelection()
+    crossover_operator = MultiCrossover()
+    mutation_operator = BitFlipMutation()
 
-    ga = GeneticAlgorithm(population,
-                          fitness_function,
-                          stop_conditions,
-                          crossover_operator,
-                          crossover_chance,
-                          mutation_chance)
+    ga = GeneticAlgorithm(population=population,
+                          fitness_function=fitness_function,
+                          stop_conditions=stop_conditions,
+                          selection_op=selection_operator,
+                          crossover_op=crossover_operator,
+                          mutation_op=mutation_operator,
+                          crossover_chance=crossover_chance,
+                          mutation_chance=mutation_chance)
 
-    ga.start()
+    ga.start(OptimizationMode.Minimization)
 
 
 if __name__ == '__main__':

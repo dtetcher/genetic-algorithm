@@ -1,8 +1,8 @@
 from typing import List
 import random
 
-from abstract.population import Chromosome, IPopulation
 from abstract.fitness import FitnessFunction
+from abstract.population import *
 from helpers import binary
 
 
@@ -19,7 +19,6 @@ class BinaryChromosome(Chromosome):
         else:
             phenotype = random.randint(a, b)
 
-
         population_g = binary.to_gray(bin(phenotype),
                                       # If translate maximal possible value to binary format
                                       # then we can get length of chromosome population.
@@ -32,15 +31,22 @@ class BinaryChromosome(Chromosome):
         self.phenotype = int(binary.from_gray(value), 2)
 
 
-class BinaryPopulation(IPopulation):
+class BinaryPopulation(Population):
 
     def __init__(self, input_set: List[Chromosome]):
         super().__init__(input_set)
 
-    def apply_fitness(self, func: FitnessFunction):
+    def apply_fitness(self, func: FitnessFunction, mode: OptimizationMode):
 
         for unit in self.population:
-            unit.fitness_score = func.fitness(unit.phenotype)
+
+            unit.fitness_score = func.fitness(unit.phenotype) \
+                                 if mode == OptimizationMode.Maximization \
+                                 \
+                                 else -func.fitness(unit.phenotype) \
+                                 if mode == OptimizationMode.Minimization \
+                                 \
+                                 else None
 
     def get_fittest(self, count: int = 1) -> List[Chromosome]:
 

@@ -2,14 +2,14 @@ from datetime import datetime
 from typing import List
 import abc
 
-from abstract.population import IPopulation
+from abstract.population import Population, OptimizationMode
 from abstract.population import Chromosome
 from concrete.list import LimitList
 
 
 class GA(abc.ABC):
 
-    def __init__(self, population: IPopulation,
+    def __init__(self, population: Population,
                  accuracy_list: LimitList,
                  crossover_chance: float,
                  mutation_chance: float):
@@ -26,11 +26,11 @@ class GA(abc.ABC):
     # # #
 
     @abc.abstractmethod
-    def start(self):
+    def start(self, mode: OptimizationMode):
         pass
 
     @abc.abstractmethod
-    def _selection(self):
+    def _selection(self, mode: OptimizationMode):
         pass
 
     @abc.abstractmethod
@@ -38,7 +38,7 @@ class GA(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _mutation(self, _population: List[Chromosome] = None):
+    def _mutation(self):
         pass
 
     # # #
@@ -46,7 +46,7 @@ class GA(abc.ABC):
     # # #
 
     @property
-    def population(self) -> IPopulation:
+    def population(self) -> Population:
         return self.__population
 
     @property

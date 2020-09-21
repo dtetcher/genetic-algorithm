@@ -1,6 +1,6 @@
 import random
 
-from abstract.crossover import CrossoverOperator
+from abstract.operators import CrossoverOperator
 from abstract.population import Chromosome
 from abstract.ga import GA
 

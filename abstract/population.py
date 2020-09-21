@@ -1,8 +1,14 @@
 from typing import List
 import random
+import enum
 import abc
 
 from abstract.fitness import FitnessFunction
+
+
+class OptimizationMode(enum.Enum):
+    Maximization = 1
+    Minimization = 2
 
 
 class Chromosome(abc.ABC):
@@ -37,7 +43,7 @@ class Chromosome(abc.ABC):
         pass
 
 
-class IPopulation(abc.ABC):
+class Population(abc.ABC):
     """
     This class used to organize population units.\n
     Class contains data which describes pop units as group\n
@@ -55,11 +61,12 @@ class IPopulation(abc.ABC):
         self.__unit_length = random_unit_length
 
     @abc.abstractmethod
-    def apply_fitness(self, func: FitnessFunction):
+    def apply_fitness(self, func: FitnessFunction, mode: OptimizationMode) -> None:
         """
         Method used to apply fitness function to whole population
-        :param func:
-        :return:
+        :param func: Fitness function
+        :param mode: Determines which function will be used (Maximization or Minimization)
+        :return: None
         """
         pass
 
